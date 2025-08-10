@@ -1,3 +1,8 @@
+variable "ssh_key_name" {
+  description = "Name of the EC2 Key Pair to allow SSH access to worker nodes"
+  type        = string
+}
+
 provider "aws" {
   region = "ap-south-1"
 }
