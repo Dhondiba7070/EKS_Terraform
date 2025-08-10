@@ -167,6 +167,8 @@ resource "aws_eks_node_group" "dhondiba" {
   }
 
   instance_types = ["t2.medium"]
+}
+
 
   remote_access {
     ec2_ssh_key               = var.ssh_key_name
