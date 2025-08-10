@@ -153,6 +153,7 @@ resource "aws_eks_cluster" "dhondiba" {
     security_group_ids = [aws_security_group.dhondiba_cluster_sg.id]
   }
 }
+
 resource "aws_eks_node_group" "dhondiba" {
   cluster_name    = aws_eks_cluster.dhondiba.name
   node_group_name = "dhondiba-node-group"
@@ -171,11 +172,4 @@ resource "aws_eks_node_group" "dhondiba" {
     ec2_ssh_key               = var.ssh_key_name
     source_security_group_ids = [aws_security_group.dhondiba_node_sg.id]
   }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.dhondiba_node_group_role_policy,
-    aws_iam_role_policy_attachment.dhondiba_node_group_cni_policy,
-    aws_iam_role_policy_attachment.dhondiba_node_group_registry_policy
-  ]
 }
-
