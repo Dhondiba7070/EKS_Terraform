@@ -2,6 +2,10 @@ output "cluster_id" {
   value = aws_eks_cluster.dhondiba.id
 }
 
+output "cluster_endpoint" {
+  value = aws_eks_cluster.dhondiba.endpoint
+}
+
 output "node_group_id" {
   value = aws_eks_node_group.dhondiba.id
 }
