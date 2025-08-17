@@ -26,4 +26,9 @@ resource "aws_subnet" "dhondiba_subnet" {
 
 # Internet Gateway
 resource "aws_internet_gateway" "dhondiba_igw" {
-  vpc_id = aws_vpc.dhon
+  vpc_id = aws_vpc.dhondiba_vpc.id
+
+  tags = {
+    Name = "dhondiba-igw"
+  }
+}
