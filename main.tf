@@ -5,6 +5,12 @@ variable "reg" {
   default     = "us-east-1"  # You can replace this with your preferred region
 }
 
+# Declare SSH Key Name variable
+variable "ssh_key_name" {
+  description = "The name of the SSH key pair to use for EC2 nodes. Ensure the key pair exists in the selected AWS region."
+  type        = string
+}
+
 # AWS Provider
 provider "aws" {
   region = var.reg  # Use the declared variable for region
@@ -196,31 +202,4 @@ resource "aws_eks_cluster" "dhondiba" {
   depends_on = [aws_iam_role_policy_attachment.dhondiba_cluster_role_policy]
 }
 
-# -------------------------------
-# Node Group
-# -------------------------------
-resource "aws_eks_node_group" "dhondiba" {
-  cluster_name    = aws_eks_cluster.dhondiba.name
-  node_group_name = "dhondiba-node-group"
-  node_role_arn   = aws_iam_role.dhondiba_node_group_role.arn
-  subnet_ids      = aws_subnet.dhondiba_subnet[*].id
-
-  scaling_config {
-    desired_size = 2
-    max_size     = 2
-    min_size     = 2
-  }
-
-  instance_types = ["t2.medium"]
-
-  remote_access {
-    ec2_ssh_key               = var.ssh_key_name
-    source_security_group_ids = [aws_security_group.dhondiba_node_sg.id]
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.dhondiba_node_group_role_policy,
-    aws_iam_role_policy_attachment.dhondiba_node_group_cni_policy,
-    aws_iam_role_policy_attachment.dhondiba_node_group_registry_policy
-  ]
-}
+# ---------------------------
