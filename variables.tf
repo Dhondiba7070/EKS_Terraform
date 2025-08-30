@@ -1,3 +1,11 @@
+# AWS region variable
+variable "region" {
+  description = "The AWS region where resources will be created"
+  type        = string
+  default     = "us-east-1"  # Set default region, can be overridden
+}
+
+# SSH Key Name variable
 variable "ssh_key_name" {
   description = "The name of the SSH key pair to use for EC2 nodes. Ensure the key pair exists in the selected AWS region."
   type        = string
