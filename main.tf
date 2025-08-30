@@ -1,5 +1,13 @@
+# Declare the region variable
+variable "reg" {
+  description = "AWS region to deploy resources"
+  type        = string
+  default     = "us-east-1"  # You can replace this with your preferred region
+}
+
+# AWS Provider
 provider "aws" {
-  region = var.region
+  region = var.reg  # Use the declared variable for region
 }
 
 # -------------------------------
