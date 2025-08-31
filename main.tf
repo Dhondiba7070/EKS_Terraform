@@ -1,29 +1,15 @@
-# Declare the region variable
-variable "reg" {
-  description = "AWS region to deploy resources"
-  type        = string
-  default     = "us-east-1"  # You can replace this with your preferred region
-}
-
-# AWS Provider
 provider "aws" {
-  region = var.reg  # Use the declared variable for region
+  region = "us-east-1"
 }
 
-# -------------------------------
-# VPC
-# -------------------------------
 resource "aws_vpc" "dhondiba_vpc" {
   cidr_block = "10.0.0.0/16"
-  
+
   tags = {
     Name = "dhondiba-vpc"
   }
 }
 
-# -------------------------------
-# Public Subnets
-# -------------------------------
 resource "aws_subnet" "dhondiba_subnet" {
   count                   = 2
   vpc_id                  = aws_vpc.dhondiba_vpc.id
@@ -34,29 +20,19 @@ resource "aws_subnet" "dhondiba_subnet" {
   tags = {
     Name = "dhondiba-subnet-${count.index}"
   }
-
-  depends_on = [aws_vpc.dhondiba_vpc]
 }
 
-# -------------------------------
-# Internet Gateway
-# -------------------------------
 resource "aws_internet_gateway" "dhondiba_igw" {
   vpc_id = aws_vpc.dhondiba_vpc.id
-  
+
   tags = {
     Name = "dhondiba-igw"
   }
-
-  depends_on = [aws_vpc.dhondiba_vpc]
 }
 
-# -------------------------------
-# Route Table
-# -------------------------------
 resource "aws_route_table" "dhondiba_route_table" {
   vpc_id = aws_vpc.dhondiba_vpc.id
-  
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.dhondiba_igw.id
@@ -65,24 +41,14 @@ resource "aws_route_table" "dhondiba_route_table" {
   tags = {
     Name = "dhondiba-route-table"
   }
-
-  depends_on = [aws_internet_gateway.dhondiba_igw]
 }
 
-# -------------------------------
-# Route Table Associations
-# -------------------------------
 resource "aws_route_table_association" "dhondiba_assoc" {
   count          = 2
   subnet_id      = aws_subnet.dhondiba_subnet[count.index].id
   route_table_id = aws_route_table.dhondiba_route_table.id
-
-  depends_on = [aws_subnet.dhondiba_subnet, aws_route_table.dhondiba_route_table]
 }
 
-# -------------------------------
-# Security Groups
-# -------------------------------
 resource "aws_security_group" "dhondiba_cluster_sg" {
   vpc_id = aws_vpc.dhondiba_vpc.id
 
@@ -120,9 +86,6 @@ resource "aws_security_group" "dhondiba_node_sg" {
   }
 }
 
-# -------------------------------
-# IAM Roles
-# -------------------------------
 resource "aws_iam_role" "dhondiba_cluster_role" {
   name = "dhondiba-cluster-role"
 
@@ -181,9 +144,6 @@ resource "aws_iam_role_policy_attachment" "dhondiba_node_group_registry_policy" 
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-# -------------------------------
-# EKS Cluster
-# -------------------------------
 resource "aws_eks_cluster" "dhondiba" {
   name     = "dhondiba-cluster"
   role_arn = aws_iam_role.dhondiba_cluster_role.arn
@@ -192,13 +152,8 @@ resource "aws_eks_cluster" "dhondiba" {
     subnet_ids         = aws_subnet.dhondiba_subnet[*].id
     security_group_ids = [aws_security_group.dhondiba_cluster_sg.id]
   }
-
-  depends_on = [aws_iam_role_policy_attachment.dhondiba_cluster_role_policy]
 }
 
-# -------------------------------
-# Node Group
-# -------------------------------
 resource "aws_eks_node_group" "dhondiba" {
   cluster_name    = aws_eks_cluster.dhondiba.name
   node_group_name = "dhondiba-node-group"
@@ -211,16 +166,10 @@ resource "aws_eks_node_group" "dhondiba" {
     min_size     = 2
   }
 
-  instance_types = ["t2.medium"]
+  instance_types = ["t2.micro"]  # ← Updated here
 
   remote_access {
-    ec2_ssh_key               = var.ssh_key_name  # Use the ssh_key_name from the variable defined in variables.tf
+    ec2_ssh_key               = var.ssh_key_name
     source_security_group_ids = [aws_security_group.dhondiba_node_sg.id]
   }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.dhondiba_node_group_role_policy,
-    aws_iam_role_policy_attachment.dhondiba_node_group_cni_policy,
-    aws_iam_role_policy_attachment.dhondiba_node_group_registry_policy
-  ]
 }
