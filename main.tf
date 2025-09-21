@@ -67,6 +67,7 @@ resource "aws_security_group" "dhondiba_cluster_sg" {
 resource "aws_security_group" "dhondiba_node_sg" {
   vpc_id = aws_vpc.dhondiba_vpc.id
 
+  # Allow all inbound traffic from anywhere (you might want to restrict this later)
   ingress {
     from_port   = 0
     to_port     = 0
@@ -74,6 +75,7 @@ resource "aws_security_group" "dhondiba_node_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -152,6 +154,10 @@ resource "aws_eks_cluster" "dhondiba" {
     subnet_ids         = aws_subnet.dhondiba_subnet[*].id
     security_group_ids = [aws_security_group.dhondiba_cluster_sg.id]
   }
+
+  tags = {
+    Name = "dhondiba-cluster"
+  }
 }
 
 resource "aws_eks_node_group" "dhondiba" {
@@ -166,10 +172,14 @@ resource "aws_eks_node_group" "dhondiba" {
     min_size     = 2
   }
 
-  instance_types = ["t2.micro"]  # ← Updated here
+  instance_types = ["t2.micro"]
 
   remote_access {
     ec2_ssh_key               = var.ssh_key_name
     source_security_group_ids = [aws_security_group.dhondiba_node_sg.id]
+  }
+
+  tags = {
+    Name = "dhondiba-node-group"
   }
 }
